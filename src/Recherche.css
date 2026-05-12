@@ -22,3 +22,25 @@
 }
 
 
+.recherche {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 8px;
+}
+
+.recherche-effacer {
+  padding: 0 16px;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.recherche-effacer:hover {
+  background-color: #c0392b;
+}
+
+
+
