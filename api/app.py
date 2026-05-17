@@ -1,5 +1,5 @@
 import json
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -16,7 +16,10 @@ def accueil():
         "message": "Bienvenue sur l'API SenTransport !",
         "endpoints": [
             "/lignes",
-            "/lignes/<id>"
+            "/lignes/<id>",
+            "/arrets",
+            "/stats",
+            "/lignes/recherche?q=..."
         ]
     })
 
@@ -26,23 +29,51 @@ def get_lignes():
     return jsonify(lignes)
 
 
+@app.route("/lignes/recherche")
+def recherche_lignes():
+    q = request.args.get("q", "").lower()
+    if not q:
+        return jsonify({"erreur": "Parametre q manquant"}), 400
+    resultats = [
+        l for l in lignes
+        if q in l["depart"].lower() or q in l["arrivee"].lower()
+    ]
+    return jsonify(resultats)
+
+
 @app.route("/lignes/<int:ligne_id>")
 def get_ligne(ligne_id):
-
     ligne = next(
-        (
-            l for l in lignes
-            if l["id"] == ligne_id
-        ),
+        (l for l in lignes if l["id"] == ligne_id),
         None
     )
-
     if ligne is None:
-        return jsonify({
-            "erreur": "Ligne non trouvee"
-        }), 404
-
+        return jsonify({"erreur": "Ligne non trouvee"}), 404
     return jsonify(ligne)
+
+
+@app.route("/arrets")
+def get_arrets():
+    tous_arrets = set()
+    for ligne in lignes:
+        for arret in ligne["listeArrets"]:
+            tous_arrets.add(arret)
+    return jsonify(sorted(list(tous_arrets)))
+
+
+@app.route("/stats")
+def get_stats():
+    total_lignes = len(lignes)
+    total_arrets = sum(l["arrets"] for l in lignes)
+    ligne_max = max(lignes, key=lambda l: l["arrets"])
+    return jsonify({
+        "total_lignes": total_lignes,
+        "total_arrets": total_arrets,
+        "ligne_plus_darrets": {
+            "numero": ligne_max["numero"],
+            "arrets": ligne_max["arrets"]
+        }
+    })
 
 
 if __name__ == "__main__":
