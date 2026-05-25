@@ -74,3 +74,21 @@
     font-family: monospace;
     font-size: 0.9rem;
 }
+
+
+.btn-recharger {
+  display: block;
+  margin: 16px auto;
+  padding: 10px 24px;
+  background-color: #2980b9;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.btn-recharger:hover {
+  background-color: #1a6fa0;
+}
+
+

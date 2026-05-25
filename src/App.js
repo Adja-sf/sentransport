@@ -3,21 +3,24 @@ import './App.css';
 
 import Header from './Header';
 import Recherche from './Recherche';
+import Meteo from './Meteo';
+import SignalerIncident from './SignalerIncident';
 import LigneBus from './LigneBus';
 import DetailLigne from './DetailLigne';
+import Carte from './Carte';
 import Footer from './Footer';
 
 function App() {
-  // 1. Tous les états
   const [lignes, setLignes] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
   const [recherche, setRecherche] = useState("");
   const [ligneSelectionnee, setLigneSelectionnee] = useState(null);
-  const [nbRecherches, setNbRecherches] = useState(0);
 
-  // 2. Charger les données au démarrage depuis Flask
-  useEffect(() => {
+  function chargerLignes() {
+    setChargement(true);
+    setErreur(null);
+
     fetch("http://localhost:5000/lignes")
       .then((response) => {
         if (!response.ok) {
@@ -33,29 +36,41 @@ function App() {
         setErreur(error.message);
         setChargement(false);
       });
-  }, []);
-
-  // 3. Filtre et handlers (inchangés)
-  function handleRecherche(valeur) {
-    setRecherche(valeur);
-    setNbRecherches(n => n + 1);
   }
 
-  const lignesFiltrees = lignes.filter((l) =>
-    l.depart.toLowerCase().includes(recherche.toLowerCase()) ||
-    l.arrivee.toLowerCase().includes(recherche.toLowerCase()) ||
-    l.numero.includes(recherche)
-  );
+  useEffect(() => {
+    chargerLignes();
+  }, []);
 
   function handleClickLigne(ligne) {
     if (ligneSelectionnee && ligneSelectionnee.id === ligne.id) {
       setLigneSelectionnee(null);
-    } else {
-      setLigneSelectionnee(ligne);
+      return;
     }
+
+    fetch(`http://localhost:5000/lignes/${ligne.id}`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Ligne introuvable");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setLigneSelectionnee(data);
+      })
+      .catch((error) => {
+        console.error("Erreur chargement détail :", error.message);
+      });
   }
 
-  // 4. Écran de chargement
+  const q = recherche.toLowerCase();
+
+  const lignesFiltrees = lignes.filter((l) =>
+    (l.depart || "").toLowerCase().includes(q) ||
+    (l.arrivee || "").toLowerCase().includes(q) ||
+    String(l.numero || "").includes(recherche)
+  );
+
   if (chargement) {
     return (
       <div className="App">
@@ -67,7 +82,6 @@ function App() {
     );
   }
 
-  // 5. Écran d'erreur
   if (erreur) {
     return (
       <div className="App">
@@ -76,31 +90,36 @@ function App() {
           <div className="message-erreur">
             <p>Impossible de charger les lignes.</p>
             <p className="erreur-detail">{erreur}</p>
-            <p>Vérifiez que le serveur Flask est lancé (python api/app.py).</p>
+            <p>Vérifiez que le serveur Flask est lancé.</p>
           </div>
         </main>
       </div>
     );
   }
 
-  // 6. Écran normal
   return (
     <div className="App">
       <Header />
 
       <main className="contenu">
-        <Recherche valeur={recherche} onChange={handleRecherche} />
+        <Meteo />
 
-        <p className="compteur-recherche">
-          Vous avez effectué {nbRecherches} recherche{nbRecherches > 1 ? "s" : ""}
-        </p>
+        <Recherche valeur={recherche} onChange={setRecherche} />
+
+        <button className="btn-recharger" onClick={chargerLignes}>
+          🔄 Recharger
+        </button>
 
         <p className="resultat-recherche">
-          {lignesFiltrees.length} ligne{lignesFiltrees.length > 1 ? "s" : ""} trouvée{lignesFiltrees.length > 1 ? "s" : ""}
+          {lignesFiltrees.length} ligne
+          {lignesFiltrees.length > 1 ? "s" : ""} trouvée
+          {lignesFiltrees.length > 1 ? "s" : ""}
         </p>
 
         {lignesFiltrees.length === 0 ? (
-          <p className="aucun-resultat">Aucune ligne trouvée pour "{recherche}".</p>
+          <p className="aucun-resultat">
+            Aucune ligne trouvée pour "{recherche}"
+          </p>
         ) : (
           lignesFiltrees.map((ligne) => (
             <LigneBus
@@ -109,7 +128,9 @@ function App() {
               depart={ligne.depart}
               arrivee={ligne.arrivee}
               arrets={ligne.arrets}
-              estSelectionnee={ligneSelectionnee && ligneSelectionnee.id === ligne.id}
+              estSelectionnee={
+                ligneSelectionnee && ligneSelectionnee.id === ligne.id
+              }
               onClick={() => handleClickLigne(ligne)}
             />
           ))
@@ -118,6 +139,9 @@ function App() {
         {ligneSelectionnee && (
           <DetailLigne ligne={ligneSelectionnee} />
         )}
+
+        <Carte />
+        <SignalerIncident />
       </main>
 
       <Footer />
