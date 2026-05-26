@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import './Meteo.css';
+import Previsions from './Previsions';
 
 function Meteo() {
     const [meteo, setMeteo] = useState(null);
@@ -101,6 +102,7 @@ function Meteo() {
                     {alerte.message}
                 </div>
             )}
+             <Previsions /> 
         </div>
     );
 }

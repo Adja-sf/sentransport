@@ -71,3 +71,9 @@
     color: #c62828;
     border-left: 4px solid #c62828;
 }
+
+
+.signaler-input select {
+  appearance: none;
+  cursor: pointer;
+}

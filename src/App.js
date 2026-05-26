@@ -5,12 +5,14 @@ import Header from './Header';
 import Recherche from './Recherche';
 import Meteo from './Meteo';
 import SignalerIncident from './SignalerIncident';
+import ListeIncidents from './ListeIncidents';
 import LigneBus from './LigneBus';
 import DetailLigne from './DetailLigne';
 import Carte from './Carte';
 import Footer from './Footer';
 
 function App() {
+   const [refresh, setRefresh] = useState(0);
   const [lignes, setLignes] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
@@ -141,7 +143,8 @@ function App() {
         )}
 
         <Carte />
-        <SignalerIncident />
+        <SignalerIncident onSuccess={() => setRefresh(r => r + 1)} />
+        <ListeIncidents refresh={refresh} />
       </main>
 
       <Footer />
